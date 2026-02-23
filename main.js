@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 /////////////////////////////////////////////RENDERER/////////////////////////////////////////////
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -23,6 +24,19 @@ camera.position.set(0, 1, 10);
 /////////////////////////////////////////////CAMERA/////////////////////////////////////////////
 
 
+
+/////////////////////////////////////////////CONTROLS/////////////////////////////////////////////
+const controls = new OrbitControls(camera, renderer.domElement)
+controls.enableDamping = true;
+controls.enablePan =false;
+controls.minPolarAngle = .1;
+controls.maxPolarAngle = 1.5;
+controls.enableZoom = true;
+controls.update();
+/////////////////////////////////////////////CONTROLS/////////////////////////////////////////////
+
+
+
 /////////////////////////////////////////////GROUNDPLANE/////////////////////////////////////////////
 const geometry = new THREE.PlaneGeometry(70, 100, 100, 100);
 geometry.rotateX(-Math.PI/2);
@@ -40,11 +54,11 @@ scene.add(groundMesh);
 
 
 /////////////////////////////////////////////LIGHTS/////////////////////////////////////////////
-const ambientLight = new THREE.AmbientLight(0xFFFFFF, .02);
+const ambientLight = new THREE.AmbientLight(0xFFFFFF, .01);
 ambientLight.position.set(0, 0, 0);
 scene.add(ambientLight);
 
-const spotLight = new THREE.SpotLight(0xFFFFFF, 5000, 100, .1, .9);
+const spotLight = new THREE.SpotLight(0xFFFFFF, 5000, 0, .1, 1);
 spotLight.position.set(0, 50, 0);
 spotLight.castShadow = true;
 spotLight.shadow.bias = -.0001;
@@ -53,21 +67,27 @@ scene.add(spotLight);
 
 
 /////////////////////////////////////////////LOADMODEL/////////////////////////////////////////////
-const loader = new GLTFLoader().setPath('.vite/assets/models/');
-loader.load('SM_PortraitWeb-v1.glb', (gltf) => {
+const loader = new GLTFLoader();
+loader.load('assets/models/SM_PortraitWeb-moved.glb', (gltf) => {
     const portrait = gltf.scene;
 
     portrait.traverse((child) => {
         if (child.isMesh) {
-            child.geometry.center();
-            child.castShadow = true;
+            child.castShadow = false;
             child.receiveShadow = true;
         }
     });
 
-    portrait.position.set (0, 0, 0);
+    portrait.position.set (0, 0, 1);
     scene.add(portrait)});
 /////////////////////////////////////////////LOADMODEL/////////////////////////////////////////////
 
 
-renderer.render(scene, camera);
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+
+}
+
+animate()
