@@ -2,8 +2,13 @@ import * as THREE from "three";
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import getLayer from "./getLayer.js"
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { color, texture } from "three/tsl";
-import { TextureLoader } from "three/webgpu";
+import { OutlinePass } from "three/examples/jsm/Addons.js";
+
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+
 
 /////////////////////////////////////////////RENDERER/////////////////////////////////////////////
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -15,7 +20,7 @@ renderer.setPixelRatio(window.devicePixelRatio)
 document.body.appendChild(renderer.domElement);
 
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 /////////////////////////////////////////////RENDERER/////////////////////////////////////////////
 
 
@@ -23,7 +28,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 /////////////////////////////////////////////CAMERA/////////////////////////////////////////////
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, .5, 1000);
-camera.position.set(0, 0, 1.8);
+camera.position.set(0, 0, 1);
 /////////////////////////////////////////////CAMERA/////////////////////////////////////////////
 
 
@@ -31,9 +36,11 @@ camera.position.set(0, 0, 1.8);
 /////////////////////////////////////////////CONTROLS/////////////////////////////////////////////
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true;
-controls.enablePan =false;
-controls.minPolarAngle = .1;
-controls.maxPolarAngle = 1.5;
+controls.enablePan =true;
+controls.minPolarAngle = 1;
+controls.maxPolarAngle = 1.4;
+controls.minAzimuthAngle = -.5;
+controls.maxAzimuthAngle = .5;
 controls.enableZoom = true;
 controls.update();
 /////////////////////////////////////////////CONTROLS/////////////////////////////////////////////
@@ -51,6 +58,7 @@ controls.update();
 /////////////////////////////////////////////GROUNDPLANE/////////////////////////////////////////////
 
 
+
 /////////////////////////////////////////////BACKGROUND/////////////////////////////////////////////
 const gradientBackground = getLayer({
   hue: 0.6,
@@ -62,6 +70,7 @@ const gradientBackground = getLayer({
 });
 scene.add(gradientBackground);
 /////////////////////////////////////////////BACKGROUND/////////////////////////////////////////////
+
 
 
 /////////////////////////////////////////////LIGHTS/////////////////////////////////////////////
@@ -81,38 +90,63 @@ scene.add(spotLight);
 /////////////////////////////////////////////LIGHTS/////////////////////////////////////////////
 
 
+
 /////////////////////////////////////////////LOADMODEL/////////////////////////////////////////////
 const loader = new GLTFLoader();
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath( '/examples/jsm/libs/draco/' );
+loader.setDRACOLoader( dracoLoader );
+
+
 loader.load('assets/models/SM_PortraitWeb-moved.glb', (gltf) => {
     const portrait = gltf.scene;
     
+    //Material & texture
     const loader = new THREE.TextureLoader();
     const texture = loader.load( 'assets/textures/T_Portrait_Albedo2048.webp' );
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.flipY =false;
-    //texture.colorSpace = THREE.SRGBColorSpace;
+    texture.colorSpace = THREE.SRGBColorSpace;
 
+    //Base material
     const portraitMaterial = new THREE.MeshPhysicalMaterial({map:texture});
+
+    //Outline material
+    //const outlineMaterial = new THREE.MeshBasicMaterial({color: "black"});
+
+    //addOutlineObject(gltf.scene);
 
     portrait.traverse((child) => {
         if (child.isMesh) {
+            console.log(child)
             child.geometry.center();
+            //child.material = outlineMaterial;
             child.material = portraitMaterial;
             child.castShadow = false;
             child.receiveShadow = true;
         }
     });
 
-    portrait.position.set (0, 0, 1);
+    portrait.position.set (0, 0, 0);
     scene.add(portrait)});
 /////////////////////////////////////////////LOADMODEL/////////////////////////////////////////////
 
 
+/////////////////////////////////////////////OUTLINEFUNCTION/////////////////////////////////////////////
+//function addOutlineObject(object){
+    //objectsToOutline.push(portrait);
+    //OutlinePass.selectedObjects = objectsToOutline;
+//}
+/////////////////////////////////////////////OUTLINEFUNCTION/////////////////////////////////////////////
+
+/////////////////////////////////////////////ANIMATEFUNCTION/////////////////////////////////////////////
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
     renderer.render(scene, camera);
+    controls.update();
 
 }
+/////////////////////////////////////////////ANIMATEFUNCTION/////////////////////////////////////////////
 
 animate()
