@@ -5,7 +5,6 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { color, texture } from "three/tsl";
 import { OutlinePass } from "three/examples/jsm/Addons.js";
-
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 
@@ -23,12 +22,16 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 /////////////////////////////////////////////RENDERER/////////////////////////////////////////////
 
+/////////////////////////////////////////////POSTPROCESSING/////////////////////////////////////////////
+//this.composer = new EffectComposer(this.threejs);
+/////////////////////////////////////////////POSTPROCESSING/////////////////////////////////////////////
+
 
 
 /////////////////////////////////////////////CAMERA/////////////////////////////////////////////
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, .5, 1000);
-camera.position.set(0, 0, 1);
+camera.position.set(0, 0, .8);
 /////////////////////////////////////////////CAMERA/////////////////////////////////////////////
 
 
@@ -36,7 +39,7 @@ camera.position.set(0, 0, 1);
 /////////////////////////////////////////////CONTROLS/////////////////////////////////////////////
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true;
-controls.enablePan =true;
+controls.enablePan =false;
 controls.minPolarAngle = 1;
 controls.maxPolarAngle = 1.4;
 controls.minAzimuthAngle = -.5;
@@ -74,9 +77,21 @@ scene.add(gradientBackground);
 
 
 /////////////////////////////////////////////LIGHTS/////////////////////////////////////////////
-const ambientLight = new THREE.AmbientLight(0xFFFFFF, .9);
+const ambientLight = new THREE.AmbientLight(0x145de5, 1);
 ambientLight.position.set(0, 0, 0);
 scene.add(ambientLight);
+
+const pointLight = new THREE.PointLight(0xFFE3FF1, 2);
+pointLight.position.set(-.9, 0, 0);
+scene.add(pointLight);
+
+const pointRimLight = new THREE.PointLight(0x00bde1, 300);
+pointRimLight.position.set(0, .9, -1.8);
+scene.add(pointRimLight);
+
+const pointLightTopDown = new THREE.PointLight(0xee8e0d, 3);
+pointLightTopDown.position.set(.9, .3, .7);
+scene.add(pointLightTopDown);
 
 const hemispherLight = new THREE.HemisphereLight(0xFFFFFF, .9);
 hemispherLight.position.set(0, 0, 0);
@@ -111,6 +126,8 @@ loader.load('assets/models/SM_PortraitWeb-moved.glb', (gltf) => {
 
     //Base material
     const portraitMaterial = new THREE.MeshPhysicalMaterial({map:texture});
+    portraitMaterial.roughness = .8;
+    portraitMaterial.iridescence = .05;
 
     //Outline material
     //const outlineMaterial = new THREE.MeshBasicMaterial({color: "black"});
@@ -123,7 +140,7 @@ loader.load('assets/models/SM_PortraitWeb-moved.glb', (gltf) => {
             child.geometry.center();
             //child.material = outlineMaterial;
             child.material = portraitMaterial;
-            child.castShadow = false;
+            child.castShadow = true;
             child.receiveShadow = true;
         }
     });
